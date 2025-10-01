@@ -1,0 +1,35 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+*service-account*.json
+*secrets*
+
+# Obsidian cache
+.obsidian/workspace*
+.obsidian/cache
+.obsidian/plugins/*/data.json
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Vault personal content (use second-brain-vault private repo for actual notes)
+vault/Memory/Sessions/
+vault/Memory/Daily/
+vault/Memory/Weekly/
+vault/Soul/*.md
+!vault/Soul/README.md
+vault/Vitals/
