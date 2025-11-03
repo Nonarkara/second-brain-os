@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "obsidian-bridge": {
+      "command": "node",
+      "args": ["/path/to/second-brain-os/mcp/obsidian-bridge/index.js"],
+      "env": {
+        "OBSIDIAN_VAULT": "/Users/YOUR_NAME/Documents/SecondBrain"
+      }
+    }
+  }
+}
