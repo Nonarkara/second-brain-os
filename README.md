@@ -1,9 +1,8 @@
-# Second Brain OS
+# Dr. Non's Second Brain System
 
-<!-- HERO BANNER — replace the line below with your banner image -->
-<!-- ![Second Brain OS](docs/hero-banner.png) -->
+![Dr. Non's Second Brain System — Obsidian Vault & Hyper-MCP](docs/hero-banner.png)
 
-> A personal operating system built on Obsidian, Claude Code, and a council of three AI siblings.
+> Obsidian Vault & Hyper-MCP. A personal operating system built on linked knowledge, a council of three AI siblings, and a free-and-open stack that costs nothing to run.
 > Open-sourced so anyone can build their own.
 
 **Built by [Dr Non Arkaraprasertkul](https://github.com/Nonarkara)** — Harvard-trained anthropologist, MIT-trained architect, smart city expert at DEPA Thailand. This is the actual system he uses to manage 28+ live projects across ASEAN while traveling between Bangkok and Singapore.
@@ -37,6 +36,145 @@ Three components work together:
 ```
 
 The **AI Council** deliberates. The **vault** remembers. You decide.
+
+---
+
+## Why This System — A Detailed Analysis
+
+This is not another productivity framework. It is a critique of how knowledge management has been done, and a replacement.
+
+### The Problem with Tabulation
+
+Most knowledge management tools — Notion, Airtable, spreadsheets, even most databases — organize information in **tables**. Rows and columns. A row is a record. A column is a property. You search by filtering columns.
+
+This works for inventory. It fails for thought.
+
+Human thinking does not move in rows. It moves in **connections**. An idea about Bangkok's livability connects to a conversation you had in Taipei last year, which connects to a study about disposable income, which connects to a decision you need to make tomorrow about a project in Phuket. A table cannot hold that chain. It can hold the endpoints, but it loses the path between them.
+
+```
+❌ Tabular model:        ✅ Vectorial model (this system):
+
+ID | Topic | Date         "Bangkok livability"
+1  | SLIC  | 2026-03       ↕ links to
+2  | Phuket| 2026-04       "Disposable income study"
+3  | DEPA  | 2026-03        ↕ links to
+                           "Taipei SCES panel 2026"
+(relationships lost)        ↕ links to
+                           "CSCO program 40 mayors"
+                           (relationships preserved)
+```
+
+Obsidian's graph model treats every note as a **node** and every `[[wikilink]]` as a **vector** — a directed connection between two pieces of knowledge. The graph is two-dimensional on screen, but it is genuinely multi-dimensional in structure: one note can connect to dozens of others, each of which connects to dozens more, creating a traversable knowledge graph that no spreadsheet can replicate.
+
+This is not a theoretical advantage. In practice it means:
+
+- When Dr Non asks his AI council a question, the MCP bridge can traverse backlinks to surface relevant context that no keyword search would find
+- When a new smart city project begins, related past projects surface automatically through the link graph — not through manual tagging
+- When a decision is made, logging it to `Soul/Working-Philosophy.md` creates a durable connection to every note that links there — every AI agent reading the vault gets that decision in context
+
+### Why the MCP Approach Beats Traditional RAG
+
+Most AI memory systems use **Retrieval-Augmented Generation (RAG)**: embed every document into vectors, store in a vector database, search by cosine similarity when the AI needs context.
+
+RAG has real costs:
+
+| RAG | This System (MCP) |
+|---|---|
+| Expensive: embedding models + vector DB hosting | Free: plain markdown files on disk |
+| Opaque: you don't know what got retrieved | Transparent: you can read every note the AI sees |
+| Stale: index must be rebuilt when notes change | Live: reads files directly, always current |
+| Complex: 3–5 services to operate | Simple: one Node.js MCP server, zero dependencies |
+| Black-box: AI decides what's relevant via similarity | Intentional: you decide what matters via wikilinks |
+| Locked in: proprietary vector stores | Portable: plain text, works offline, no API calls |
+
+The MCP bridge is not smarter than RAG. It is more honest. It reads what you wrote, exactly as you wrote it, and gives it to the AI directly. No embedding, no similarity threshold, no retrieval hallucination. The AI sees the actual note.
+
+And because the vault uses Obsidian's link graph instead of semantic similarity, **you** decide what connects to what — not a distance function trained on someone else's corpus.
+
+```mermaid
+flowchart LR
+    subgraph RAG["Traditional RAG"]
+        direction TB
+        N1[Note A] --> E1[Embed]
+        N2[Note B] --> E2[Embed]
+        N3[Note C] --> E3[Embed]
+        E1 & E2 & E3 --> VDB[(Vector DB)]
+        Q[Query] --> QE[Embed query]
+        QE --> |cosine similarity| VDB
+        VDB --> |"maybe relevant?"| AI1[AI]
+    end
+
+    subgraph MCP["This System"]
+        direction TB
+        V[Vault\nwikilink graph] --> BRIDGE[MCP Bridge\n8 direct tools]
+        BRIDGE --> |read_note\nsearch_vault\nget_context| AI2[AI]
+        AI2 --> |write_note\nwrite_inbox\nlog_decision| V
+    end
+
+    style RAG fill:#2c2c2c,color:#aaa
+    style MCP fill:#1a2744,color:#4a90d9
+```
+
+### The Architectural Logic — Trial, Error, and the MIT Way
+
+This system was not designed from first principles. It was built the way Dr Non builds everything: start with the problem, build the smallest thing that addresses it, throw away what doesn't work, keep what does.
+
+The evolution:
+
+```
+2025 Q3   Obsidian alone — just taking notes
+          Problem: notes don't talk to AI, AI doesn't remember notes
+
+2025 Q4   First MCP bridge — Claude Code can read/write the vault
+          Problem: AI reads everything, but has no sense of what matters
+
+2025 Q4   Soul layer — identity files AI reads before everything else
+          Problem: AI gives good answers, but each session starts cold
+
+2026 Q1   Council (Hannah/Radar/Tenet) — three bots deliberate before answering
+          Problem: bots only talk to Dr Non, not to each other
+
+2026 Q2   Sequential debate loop — bots read each other's transcript via HTTP
+          Result: genuine deliberation, named disagreements, PASS/DONE protocol
+
+2026 Q2   SCES 2026, Taipei — Dr Non demos the conflict monitor live on stage
+          Realization: the same "build before procure" philosophy applies to AI systems
+```
+
+The key insight from the MIT training (not the Carnegie Mellon way): **take what already exists and put it together quickly**. Obsidian already exists. MCP already exists. Telegram bots already exist. The Gemini and Claude APIs already exist. No part of this system required inventing new technology. It required connecting the right pieces in the right order.
+
+The architectural mind behind it thinks in **spaces**, not tables. An architect sees a building not as a list of rooms but as a network of flows — how people move, what they see from where, which spaces activate which other spaces. Applied to knowledge: not "what category does this belong to" but "what does this connect to, and what does that unlock."
+
+This is why the vault has nine brain **regions**, not nine categories. Regions have topology. Categories have only membership.
+
+### The Cost Argument — Genuinely Free
+
+Every component of this system runs at zero marginal cost:
+
+| Component | Cost | Alternative |
+|---|---|---|
+| Obsidian | Free (personal use) | Notion $8–16/month |
+| obsidian-bridge MCP | Free (self-hosted, ~50 MB RAM) | Mem.ai $10/month |
+| Telegram bots | Free (unlimited messages) | Slack $7.25/user/month |
+| GitHub (vault backup) | Free (private repo) | Dropbox $10/month |
+| Google Drive (full backup) | Free (rclone sync to existing account) | Backblaze $7/month |
+| Claude Code skills | Free (markdown files) | Custom tooling |
+| Cloudflare Tunnel | Free | ngrok $8/month |
+
+The only paid component is Claude Code itself (Anthropic subscription), because a good reasoning engine is the point of the whole system. Everything else — the storage, the sync, the bots, the tunneling, the backup — is zero.
+
+The monthly cost of running this system, excluding Claude Code: **$0.**
+
+### What the Banner Shows
+
+The manga aesthetic is intentional. The image shows:
+
+- **The crystals on the left** = knowledge nodes in the Obsidian graph. Each crystal is a note. The energy lines between them are wikilinks. The graph looks like explosion of light because knowledge, properly connected, is explosive.
+- **Dr Non at the center** = the human intelligence that decides what matters. The system serves him, not the other way around.
+- **The MCP reactor on the right** = the Hyper-MCP core — obsidian-bridge, the council endpoints, the backup automation. The reactor glows because it processes continuously (captures, backups, daily briefs every 6 hours).
+- **The data-flow lines** = the pipeline: Telegram → Hannah → transcript → Radar → Tenet → vault → GitHub → Google Drive.
+- **The manga panel borders** = this is version 1 of something that will have many versions. Comic panels show sequence. This system evolves frame by frame, like a story.
+- **(dr.non-brain-v1/26)** = version 1, 2026.
 
 ---
 
