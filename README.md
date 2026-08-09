@@ -9,6 +9,35 @@
 
 ---
 
+## ⚡ Start here: connect your vault to your AI agent
+
+**→ [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md) — the complete, tested, 10-minute setup.**
+
+If you read one file in this repo, read that one. It takes you from a plain
+Obsidian vault to an agent that can read, search, and safely edit your notes as
+first-class tools — no copy-pasting into a chat box.
+
+**What changed in 2026:** you almost certainly **don't need a custom MCP
+bridge any more.** As of v4.0 (May 2026), the official *Local REST API* plugin
+ships an MCP server **built in** — 16 Obsidian-aware tools, no extra process to
+install or supervise. If Obsidian is running, your MCP server is running.
+
+The guide covers:
+
+- The 10-minute setup, every command verified against a real 1.7GB vault
+- **The #1 reason it "doesn't work":** enabling the plugin does *not* start the
+  server — you must fully quit and reopen Obsidian. Verify with one `lsof`.
+- All 16 tools, and the two that change how you work (`vault_patch` for
+  section-level edits, `command_execute` for the whole command palette)
+- **Security**: the API key is full read/write to your vault, it lives in
+  `.obsidian/plugins/.../data.json`, and committing your `.obsidian` folder
+  publishes it. There's a `.gitignore` that prevents exactly that.
+- How to structure a vault an agent can actually navigate — and the house-rules
+  file that stops it making a mess
+- A two-minute diagnostic ladder for when it breaks
+
+---
+
 ## What Is This?
 
 Most people use Obsidian as a note-taking app. This treats it as an **operating system** — the persistent memory layer for a human-AI hybrid workspace.

@@ -1,10 +1,18 @@
 {
+  "//": "RECOMMENDED (2026+): the Local REST API plugin v4.0+ has an MCP server",
+  "//_": "built in. No bridge process to install or supervise — if Obsidian is",
+  "//__": "running, your MCP server is running. See docs/obsidian-mcp-setup.md.",
+  "//___": "Get the key from Settings -> Local REST API. It is a full read/write",
+  "//____": "vault credential: never commit it.",
+  "//_____": "Port 27123 (HTTP) is used because 27124 (HTTPS) is self-signed and",
+  "//______": "most clients reject it. Both bind to loopback only.",
+
   "mcpServers": {
-    "obsidian-bridge": {
-      "command": "node",
-      "args": ["/path/to/second-brain-os/mcp/obsidian-bridge/index.js"],
-      "env": {
-        "OBSIDIAN_VAULT": "/Users/YOUR_NAME/Documents/SecondBrain"
+    "obsidian": {
+      "type": "http",
+      "url": "http://127.0.0.1:27123/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_OBSIDIAN_API_KEY"
       }
     }
   }
