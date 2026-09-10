@@ -33,3 +33,6 @@ vault/Memory/Weekly/
 vault/Soul/*.md
 !vault/Soul/README.md
 vault/Vitals/
+
+mcp/obsidian-bridge/node_modules/
+**/.mcp/cache/

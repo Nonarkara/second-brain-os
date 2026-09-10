@@ -1,0 +1,133 @@
+[
+  {
+    "query": "moving markers on a map",
+    "expected_paths": [
+      "Scars/Debug-Logs/2026-07-29-react-leaflet-live-marker-position-updates.md"
+    ]
+  },
+  {
+    "query": "marker does not update position",
+    "expected_paths": [
+      "Scars/Debug-Logs/2026-07-29-react-leaflet-live-marker-position-updates.md"
+    ]
+  },
+  {
+    "query": "codex silent rewrite axiom public index.html shrank 1338 to 345 lines leaflet map destroyed without warning",
+    "expected_paths": [
+      "Scars/Debug-Logs/2026-04-23-codex-silent-rewrite.md"
+    ]
+  },
+  {
+    "query": "agent wants to delete a canvas animation during cleanup",
+    "expected_paths": [
+      "Scars/Anti-Regression/Codex-Incident-Laws.md",
+      "Knowledge/Bible/10-anti-regression.md"
+    ]
+  },
+  {
+    "query": "how coding agents share Obsidian memory",
+    "expected_paths": [
+      "Knowledge/Topics/mcp-connections.md",
+      "Will/Projects/second-brain.md"
+    ]
+  },
+  {
+    "query": "precompute semantic backlinks instead of scanning notes every request",
+    "expected_paths": [
+      "Knowledge/Topics/mcp-design-patterns.md"
+    ]
+  },
+  {
+    "query": "production health endpoints and five minute uptime checks",
+    "expected_paths": [
+      "Knowledge/Topics/monitoring-and-ops.md",
+      "Knowledge/Bible/08-deployment.md"
+    ]
+  },
+  {
+    "query": "deck gl build breaks under turbopack",
+    "expected_paths": [
+      "Knowledge/Topics/tech-stack.md",
+      "Reflexes/Snippets/deckgl/layer-configs.md"
+    ]
+  },
+  {
+    "query": "which point on a vehicle bounding box maps to the road",
+    "expected_paths": [
+      "Knowledge/Topics/computer-vision-speed-estimation.md"
+    ]
+  },
+  {
+    "query": "measure vehicle speed between two virtual lines",
+    "expected_paths": [
+      "Knowledge/Topics/computer-vision-speed-estimation.md"
+    ]
+  },
+  {
+    "query": "what must remain on the Axiom website",
+    "expected_paths": [
+      "Will/Projects/axiom.md",
+      "Scars/Anti-Regression/Codex-Incident-Laws.md"
+    ]
+  },
+  {
+    "query": "which file is truth for the 157 city ranking",
+    "expected_paths": [
+      "Will/Projects/slic-index.md"
+    ]
+  },
+  {
+    "query": "database truth spreadsheet mirror contract",
+    "project": "TKC",
+    "expected_paths": [
+      "Will/Projects/tkc.md",
+      "Will/Projects/TKC/TKC-Project-Intelligence.md"
+    ]
+  },
+  {
+    "query": "health check route for the bus rider service",
+    "project": "PBUS",
+    "expected_paths": [
+      "Will/Projects/phuket-smart-bus.md"
+    ]
+  },
+  {
+    "query": "where the second brain captures information from",
+    "expected_paths": [
+      "Will/Projects/second-brain.md"
+    ]
+  },
+  {
+    "query": "Thailand fire satellite data with province and land use",
+    "expected_paths": [
+      "Knowledge/Topics/gistda-api-catalog.md",
+      "Knowledge/Domains/satellite-apis.md"
+    ]
+  },
+  {
+    "query": "interface must avoid rounded corners gradients and stock images",
+    "expected_paths": [
+      "Knowledge/Bible/10-anti-regression.md",
+      "Scars/Anti-Regression/Codex-Incident-Laws.md"
+    ]
+  },
+  {
+    "query": "correct Thai first person and non-looped font",
+    "expected_paths": [
+      "Knowledge/Topics/design-system.md",
+      "Knowledge/Bible/04-typography-and-color.md"
+    ]
+  },
+  {
+    "query": "API time window with no data should still succeed",
+    "expected_paths": [
+      "Knowledge/Topics/tech-stack.md"
+    ]
+  },
+  {
+    "query": "when to choose Next App Router or Vite for dashboards",
+    "expected_paths": [
+      "Knowledge/Topics/tech-stack.md"
+    ]
+  }
+]
