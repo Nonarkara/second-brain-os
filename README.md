@@ -28,9 +28,11 @@ What is in **this** public tree:
 | Path | What you actually get |
 |---|---|
 | [`vault/`](vault/) | Nine empty brain *regions* (folders + `.gitkeep`). Identity notes under `Soul/` are **not** shipped — only [`vault/Soul/README.md`](vault/Soul/README.md). |
-| [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md) | The 2026 setup: official *Local REST API with MCP* plugin. If Obsidian is running, the MCP server is running. |
-| [`mcp/obsidian-bridge/`](mcp/obsidian-bridge/) | A filesystem MCP example. **Superseded** for day-to-day use; kept for the case where Obsidian is closed. |
-| [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example) | Placeholder MCP client config. The API key is yours; never commit it. |
+| [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md) | **A+ coding MCP:** filesystem forge + disposable recall index (cull / smoke / eval). Optional Local REST API alternate. |
+| [`mcp/obsidian-bridge/`](mcp/obsidian-bridge/) | Production **filesystem** MCP for Cursor/Claude/Codex — works with Obsidian open or closed. |
+| [`mcp/obsidian-memory/`](mcp/obsidian-memory/) | Local `brain` CLI: index / recall / capture / audit / eval (SQLite + optional Ollama embeds). |
+| [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example) | Stdio forge wiring. Absolute paths; never commit secrets. |
+| [`scripts/cull-orphan-mcp-bridges.sh`](scripts/cull-orphan-mcp-bridges.sh) | Kill leftover bridge Node processes clients abandon. |
 | [`skills/`](skills/) | Nine Claude Code skills (slash commands) as markdown. |
 | [`council/`](council/) | Sequential-debate protocol: Hannah (chair), Radar (skeptic), Tenet (long view). Endpoints and orchestrator — not a hosted Telegram product. |
 | [`braind/`](braind/) | A one-shot “pulse” worker: transfer when online, compute when offline. Keys stay in the operator’s environment. |
@@ -55,7 +57,7 @@ Four studio tenets. They are how this repo is meant to be forked, not slogans.
 
 **Fork the method, not the secrets.** The vault *shape*, the MCP tools, the PASS/DONE council protocol, and the skills are the public claim. Personal notes, Soul identity files, Telegram tokens, Obsidian API keys, and backup remotes are not. If a learner needs your diary to use the system, the system failed.
 
-**One Mac.** Obsidian + an MCP-capable agent + this tree. The recommended 2026 path is the official plugin’s built-in MCP server — no extra Node process to babysit, no vector database bill, no data centre. `braind` is a pulse launched by `launchd`, not a cluster.
+**One Mac.** Obsidian + an MCP-capable agent + this tree. The recommended **coding** path is the filesystem forge (`mcp/obsidian-bridge`) plus disposable local recall (`mcp/obsidian-memory`) — no vector SaaS bill. Cull orphan bridge processes. Optional Local REST API MCP when Obsidian is open. `braind` is a pulse launched by `launchd`, not a cluster.
 
 **No black-box rankings.** This is not a city index, and it is not RAG-as-oracle. You choose the `[[wikilinks]]`. The agent reads the note you wrote, not a cosine score from someone else’s corpus. If you cannot open the file the model saw, it does not belong in the loop.
 
@@ -91,7 +93,7 @@ If a contribution would only work by pasting a secret, it does not belong here.
 
 ## How to use / learn
 
-If you read one file after this README, read **[`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md)**. It is the tested loop: plugin → API key → restart Obsidian → verify a listen port → point your agent at `http://127.0.0.1:27123/mcp`.
+If you read one file after this README, read **[`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md)**. It is the tested loop: wire the filesystem forge → `brain index` → smoke → cull orphans. Optional REST plugin path is documented second.
 
 ### What you need
 
@@ -126,21 +128,21 @@ Nine regions (folders in `vault/`):
 | **Vitals** | Health / finance / credentials — keep this **off** git |
 | **Will** | Projects and plans |
 
-### 2. Connect the agent (recommended)
+### 2. Connect the agent (recommended — filesystem forge)
 
-Follow [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md). Copy [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example), put **your** key in, and never commit the result.
-
-The #1 failure mode in that guide: enabling the plugin does not start the server until you fully quit and reopen Obsidian. Verify with `lsof` before debugging the agent.
-
-**Filesystem bridge** (only if you need the vault while Obsidian is closed):
+Follow [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md). Copy [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example), set absolute paths, never commit secrets.
 
 ```bash
-cd mcp/obsidian-bridge
-npm install
-# OBSIDIAN_VAULT=/absolute/path/to/vault  — see mcp/obsidian-bridge/README.md
+export OBSIDIAN_VAULT=/absolute/path/to/vault   # or "$PWD/vault" while learning
+cd mcp/obsidian-bridge && npm install
+python3 ../obsidian-memory/brain.py index --json
+node smoke-test.mjs
+bash ../../scripts/cull-orphan-mcp-bridges.sh
 ```
 
-Prefer a maintained filesystem MCP server over this example for production headless use. This bridge is a worked sample.
+Optional: Official Local REST API + MCP when Obsidian stays open — documented second in the setup guide. Coding agents should keep the filesystem forge wired either way.
+
+#1 forge failure mode: orphan `node …/obsidian-bridge` processes — cull them. #1 REST failure mode: plugin enabled but ports not listening — fully quit and reopen Obsidian, then `lsof`.
 
 ### 3. Skills
 
