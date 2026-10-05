@@ -1,14 +1,16 @@
 {
-  "//": "A+ coding path: filesystem forge (stdio). Absolute paths required.",
-  "//_": "Optional alternate: Local REST API HTTP MCP when Obsidian is open — see docs/obsidian-mcp-setup.md",
-  "//__": "Never commit real API keys or private vault paths you care about leaking.",
+  "//": "Filesystem forge (stdio) is the coding MCP. Fill absolute paths on THIS machine.",
+  "//node": "Prefer \"node\" when the app inherits a PATH that can see it. Otherwise command -v node. Do not paste another computer's /opt/homebrew/bin/node.",
+  "//rest": "Local REST API is optional and not required for coding. See docs/obsidian-mcp-setup.md.",
+  "//secrets": "Never commit API keys. Do not commit this file after you replace /ABS/PATH.",
 
   "mcpServers": {
     "obsidian-bridge": {
-      "command": "/opt/homebrew/bin/node",
+      "command": "node",
       "args": ["/ABS/PATH/second-brain-os/mcp/obsidian-bridge/index.js"],
       "env": {
-        "OBSIDIAN_VAULT": "/ABS/PATH/to/your/vault"
+        "OBSIDIAN_VAULT": "/ABS/PATH/to/your/vault",
+        "OBSIDIAN_TIME_ZONE": "Asia/Bangkok"
       }
     }
   }

@@ -11,13 +11,13 @@ import time
 import re
 from datetime import datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from memory_core import (
     MemoryIndex,
     SecretDetected,
     capture_lesson,
     format_recall_markdown,
+    operator_timezone,
 )
 
 
@@ -54,8 +54,8 @@ def parser() -> argparse.ArgumentParser:
     evaluate = sub.add_parser("eval", help="Run the fixed retrieval evaluation set")
     evaluate.add_argument(
         "--cases",
-        default=str(Path(__file__).with_name("eval-cases.json")),
-        help="Path to retrieval cases JSON",
+        default=None,
+        help="Retrieval cases JSON. Default: $OBSIDIAN_EVAL_CASES, then the vault cache, then eval-cases.json beside this file.",
     )
     evaluate.add_argument("--json", action="store_true")
     return command
@@ -106,9 +106,26 @@ def evaluate(index: MemoryIndex, cases_path: Path):
         "p95_ms": ordered[p95_index] if ordered else 0,
         "gate_accuracy": passed_count / len(rows) >= 0.85 if rows else False,
         "gate_latency": ordered[p95_index] < 1500 if ordered else False,
+        "suite_target": 20,
+        "suite_complete": len(rows) >= 20,
         "failures": [row for row in rows if not row["passed"]],
         "rows": rows,
     }
+
+
+def resolve_cases_path(vault: Path, explicit: str | None) -> Path:
+    if explicit:
+        return Path(explicit).expanduser()
+    env = os.environ.get("OBSIDIAN_EVAL_CASES")
+    if env:
+        return Path(env).expanduser()
+    cached = vault / ".mcp" / "cache" / "eval-cases.json"
+    if cached.is_file():
+        return cached
+    beside = Path(__file__).with_name("eval-cases.json")
+    if beside.is_file():
+        return beside
+    return cached
 
 
 def compact_text(text: str, maximum: int) -> str:
@@ -118,7 +135,7 @@ def compact_text(text: str, maximum: int) -> str:
 
 
 def compact_context(vault: Path, index: MemoryIndex, project: str = "", query: str = "") -> str:
-    date = datetime.now(ZoneInfo("Asia/Bangkok")).strftime("%Y-%m-%d %H:%M")
+    date = datetime.now(operator_timezone()).strftime("%Y-%m-%d %H:%M")
     project_text = "No project requested."
     if project:
         slug = re.sub(r"[^a-z0-9]+", "-", project.lower()).strip("-")
@@ -194,15 +211,30 @@ def main() -> int:
             text = compact_context(vault, index, args.project, args.query)
             emit({"text": text, "chars": len(text)} if args.json else text, args.json)
         elif args.command == "eval":
-            result = evaluate(index, Path(args.cases))
+            cases_path = resolve_cases_path(vault, args.cases)
+            if not cases_path.is_file():
+                template = Path(__file__).with_name("eval-cases.template.json")
+                print(
+                    "No eval suite for this vault.\n"
+                    f"  looked for: {cases_path}\n"
+                    f"  template:   {template}\n"
+                    "  build 20 cases from your own notes:\n"
+                    "    python3 mcp/obsidian-memory/build_eval_cases.py\n"
+                    "  Do not commit the generated file.",
+                    file=sys.stderr,
+                )
+                return 2
+            result = evaluate(index, cases_path)
             summary = {
-                "timestamp": datetime.now(ZoneInfo("Asia/Bangkok")).isoformat(timespec="seconds"),
+                "timestamp": datetime.now(operator_timezone()).isoformat(timespec="seconds"),
                 "passed": result["passed"],
                 "total": result["total"],
                 "accuracy": result["accuracy"],
                 "p95_ms": result["p95_ms"],
                 "gate_accuracy": result["gate_accuracy"],
                 "gate_latency": result["gate_latency"],
+                "suite_target": result["suite_target"],
+                "suite_complete": result["suite_complete"],
             }
             index.db_path.parent.mkdir(parents=True, exist_ok=True)
             (index.db_path.parent / "last-eval.json").write_text(

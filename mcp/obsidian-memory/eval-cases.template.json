@@ -1,0 +1,12 @@
+[
+  {
+    "query": "REPLACE with a phrase that appears in one of your notes and almost nowhere else",
+    "expected_paths": ["Scars/Debug-Logs/YYYY-MM-DD-your-lesson.md"]
+  },
+  {
+    "query": "REPLACE with a second distinctive phrase from a different note",
+    "project": "",
+    "stack": "",
+    "expected_paths": ["Knowledge/Topics/your-topic.md"]
+  }
+]

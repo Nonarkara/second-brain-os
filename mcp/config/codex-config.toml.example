@@ -1,0 +1,22 @@
+# Codex stdio bridge. Paste into ~/.codex/config.toml on THIS machine.
+# Replace the two absolute paths. Do not commit the filled-in file:
+# another OS username makes /Users/you/... wrong on the other computer.
+#
+# command: `command -v node` on this machine. Apple Silicon Homebrew,
+# Intel Homebrew, nvm, and Linux do not share a node path.
+#
+# Codex can leak one bridge process per thread. The hourly cull keeps the
+# newest bridge of each living client and removes older extras after the
+# age floor. While you are working, expect one bridge per live client,
+# not zero. See docs/obsidian-mcp-setup.md.
+
+[mcp_servers.obsidian]
+command = "node"
+args = ["/ABS/PATH/second-brain-os/mcp/obsidian-bridge/index.js"]
+startup_timeout_sec = 10
+tool_timeout_sec = 60
+default_tools_approval_mode = "writes"
+
+[mcp_servers.obsidian.env]
+OBSIDIAN_VAULT = "/ABS/PATH/to/your/vault"
+OBSIDIAN_TIME_ZONE = "Asia/Bangkok"

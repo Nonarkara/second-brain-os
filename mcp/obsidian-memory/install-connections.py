@@ -23,8 +23,8 @@ def arguments():
     parser.add_argument("--home", default=str(Path.home()), help="Home directory, used by tests and migrations")
     parser.add_argument(
         "--vault",
-        default=str(Path(__file__).resolve().parents[2]),
-        help="SecondBrain vault path",
+        default=os.environ.get("OBSIDIAN_VAULT", str(Path.home() / "Documents" / "SecondBrain")),
+        help="Vault of notes. The bridge binary stays in this repo under mcp/obsidian-bridge.",
     )
     return parser.parse_args()
 
@@ -47,27 +47,68 @@ def atomic_write(path: Path, content: str, mode: Optional[int] = None) -> None:
         path.chmod(previous_mode)
 
 
+def node_binary() -> str:
+    node = os.environ.get("OBSIDIAN_NODE") or shutil.which("node")
+    if not node:
+        raise SystemExit(
+            "node not on PATH. Install Node.js 18+ or set OBSIDIAN_NODE to the output of `command -v node` on this machine."
+        )
+    return node
+
+
+def bridge_index() -> Path:
+    override = os.environ.get("OBSIDIAN_BRIDGE_INDEX")
+    if override:
+        return Path(override).expanduser()
+    return Path(__file__).resolve().parents[1] / "obsidian-bridge" / "index.js"
+
+
+def brain_py() -> Path:
+    override = os.environ.get("OBSIDIAN_BRAIN_CLI")
+    if override:
+        return Path(override).expanduser()
+    return Path(__file__).resolve().with_name("brain.py")
+
+
+def sh_quote(value: str) -> str:
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
+def brain_wrapper(vault: Path) -> str:
+    quoted_vault = sh_quote(str(vault))
+    return (
+        "#!/bin/sh\n"
+        f"export OBSIDIAN_VAULT=${{OBSIDIAN_VAULT:-{quoted_vault}}}\n"
+        "export OBSIDIAN_TIME_ZONE=${{OBSIDIAN_TIME_ZONE:-Asia/Bangkok}}\n"
+        f"exec python3 {sh_quote(str(brain_py()))} \"$@\"\n"
+    )
+
+
 def expected_servers(vault: Path, home: Path) -> Dict[str, Tuple[Path, str, str, dict]]:
-    node = shutil.which("node") or "/opt/homebrew/bin/node"
-    bridge = str(vault / ".mcp/obsidian-bridge/index.js")
+    node = node_binary()
+    bridge = str(bridge_index())
+    env = {
+        "OBSIDIAN_VAULT": str(vault),
+        "OBSIDIAN_TIME_ZONE": os.environ.get("OBSIDIAN_TIME_ZONE", "Asia/Bangkok"),
+    }
     return {
         "claude-code": (
             home / ".claude.json",
             "mcpServers",
             "obsidian-bridge",
-            {"type": "stdio", "command": node, "args": [bridge], "env": {"OBSIDIAN_VAULT": str(vault)}},
+            {"type": "stdio", "command": node, "args": [bridge], "env": env},
         ),
         "cursor": (
             home / ".cursor/mcp.json",
             "mcpServers",
             "obsidian-bridge",
-            {"command": node, "args": [bridge], "env": {"OBSIDIAN_VAULT": str(vault)}},
+            {"command": node, "args": [bridge], "env": env},
         ),
         "vscode": (
             home / "Library/Application Support/Code/User/mcp.json",
             "servers",
             "obsidian-bridge",
-            {"type": "stdio", "command": node, "args": [bridge], "env": {"OBSIDIAN_VAULT": str(vault)}},
+            {"type": "stdio", "command": node, "args": [bridge], "env": env},
         ),
     }
 
@@ -87,8 +128,8 @@ def wire_json(path: Path, section: str, name: str, expected: dict, apply: bool) 
 
 
 def codex_block(vault: Path) -> str:
-    node = shutil.which("node") or "/opt/homebrew/bin/node"
-    bridge = vault / ".mcp/obsidian-bridge/index.js"
+    node = node_binary()
+    bridge = bridge_index()
     return (
         "[mcp_servers.obsidian]\n"
         f'command = {json.dumps(node)}\n'
@@ -98,7 +139,7 @@ def codex_block(vault: Path) -> str:
         'default_tools_approval_mode = "writes"\n\n'
         "[mcp_servers.obsidian.env]\n"
         f"OBSIDIAN_VAULT = {json.dumps(str(vault))}\n"
-        'OBSIDIAN_TIME_ZONE = "Asia/Bangkok"\n'
+        f"OBSIDIAN_TIME_ZONE = {json.dumps(os.environ.get('OBSIDIAN_TIME_ZONE', 'Asia/Bangkok'))}\n"
     )
 
 
@@ -169,7 +210,7 @@ def main() -> int:
         '---\nname: SecondBrain Shared Memory\ndescription: Retrieve and save verified coding lessons through Dr Non\'s Obsidian vault\napplyTo: "**"\n---\n\n'
         "Current AGENTS.md and project instructions override recalled notes. Before coding, debugging, or choosing architecture, use the `obsidian-bridge` MCP tool `recall_lessons` with the task plus any project, stack, or error. Retrieve at most three results and never load the whole vault. After a novel fix is verified, use `capture_lesson` with the symptom, failed attempt, cause, fix, applicability, source, and concrete verification. Unverified candidates and raw sessions must not guide work. Never store secrets. If MCP is unavailable, use the `brain` CLI.\n"
     )
-    wrapper = '#!/bin/zsh\nexec python3 "$HOME/Documents/SecondBrain/.mcp/obsidian-memory/brain.py" "$@"\n'
+    wrapper = brain_wrapper(vault)
     aider = f"read:\n  - {vault / 'Bridges/Agent-Core.md'}\n"
     statuses["cursor-rule"] = ensure_text(home / "Projects/.cursor/rules/secondbrain.mdc", cursor_rule, args.apply)
     statuses["vscode-rule"] = ensure_text(home / ".copilot/instructions/secondbrain.instructions.md", copilot_rule, args.apply)

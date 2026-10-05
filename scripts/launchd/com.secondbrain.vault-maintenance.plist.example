@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.secondbrain.vault-maintenance</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO__/scripts/run-vault-maintenance.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>OBSIDIAN_VAULT</key>
+    <string>__HOME__/Documents/SecondBrain</string>
+    <key>OBSIDIAN_TIME_ZONE</key>
+    <string>Asia/Bangkok</string>
+    <key>HOME</key>
+    <string>__HOME__</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>5</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/secondbrain-vault-maintenance.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/secondbrain-vault-maintenance.err</string>
+</dict>
+</plist>
