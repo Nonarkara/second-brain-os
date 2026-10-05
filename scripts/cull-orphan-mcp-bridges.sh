@@ -5,8 +5,9 @@
 # per open thread). It is not "zero processes".
 #
 # Default policy:
-#   - Match a real argv entry ending in obsidian-bridge/index.js.
-#     Clients that merely mention that path (MCP JSON, --mcp-config) are not bridges.
+#   - Match a process whose program is node/nodejs and a later argv entry is the
+#     bridge script. Clients that merely mention the path (MCP JSON, --mcp-config,
+#     a shell command line) are not bridges.
 #   - Keep the newest bridge of each living parent, however old it is.
 #   - Remove older siblings, and bridges reparented to pid 1, only after
 #     OBSIDIAN_BRIDGE_CULL_MIN_AGE_SEC (default 3600). An hourly launchd job
@@ -46,7 +47,7 @@ etime_to_seconds() {
 }
 
 is_bridge_command() {
-  local cmd="$1" token noglob=0
+  local cmd="$1" token first="" base="" noglob=0
   case "$cmd" in
     *mcpServers*|*--mcp-config*) return 1 ;;
   esac
@@ -57,6 +58,18 @@ is_bridge_command() {
     token="${token#\"}"
     token="${token%\'}"
     token="${token#\'}"
+    if [[ -z "$first" ]]; then
+      first="$token"
+      base="${first##*/}"
+      case "$base" in
+        node|nodejs) ;;
+        *)
+          [[ "$noglob" == 0 ]] && set +f
+          return 1
+          ;;
+      esac
+      continue
+    fi
     case "$token" in
       *[{}\[\],:]*) continue ;;
     esac

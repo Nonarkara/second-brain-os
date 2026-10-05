@@ -140,7 +140,7 @@ The learning stub can pass smoke before it can pass eval.
 bash scripts/cull-orphan-mcp-bridges.sh
 ```
 
-The matcher is a real argv entry ending in `obsidian-bridge/index.js` (override with `OBSIDIAN_BRIDGE_CULL_PATTERN`). It does not use a `SecondBrain/.mcp/...` path, and it does not `pgrep -f` that string: clients embed the path inside their own command line.
+The matcher is a `node` (or `nodejs`) process with a later argv entry ending in `obsidian-bridge/index.js` (override the suffix with `OBSIDIAN_BRIDGE_CULL_PATTERN`). It does not use a `SecondBrain/.mcp/...` path, and it does not `pgrep -f` that string: clients embed the path inside their own command line, and a shell that merely mentions the path is not a bridge.
 
 Default policy (`OBSIDIAN_BRIDGE_CULL_KEEP_NEWEST=1`, `OBSIDIAN_BRIDGE_CULL_MIN_AGE_SEC=3600`):
 

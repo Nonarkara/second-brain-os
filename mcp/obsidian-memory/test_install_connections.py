@@ -1,11 +1,18 @@
+import importlib.util
 import os
-import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
 
-import install_connections  # noqa: E402
+def _load_installer():
+    path = Path(__file__).with_name("install-connections.py")
+    spec = importlib.util.spec_from_file_location("install_connections", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+install_connections = _load_installer()
 
 
 class InstallConnectionTests(unittest.TestCase):

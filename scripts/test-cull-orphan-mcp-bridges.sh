@@ -21,6 +21,12 @@ embedded='/exec-daemon/node /exec-daemon/index.js serve --mcp-config {"mcpServer
 if is_bridge_command "$embedded"; then
   fail "embedded MCP JSON must not count as a bridge process"
 fi
+if is_bridge_command "python3 -c import /tmp/mcp/obsidian-bridge/index.js"; then
+  fail "a non-node process that mentions the script is not a bridge"
+fi
+if is_bridge_command "bash -c node /repo/mcp/obsidian-bridge/index.js"; then
+  fail "a shell command line that mentions the script is not a bridge"
+fi
 
 # Same parent, 2h leftover + 2m live. Keep the live one only.
 rows=$'100\t50\t7200\tnode /repo/mcp/obsidian-bridge/index.js\n101\t50\t120\tnode /repo/mcp/obsidian-bridge/index.js\n'
