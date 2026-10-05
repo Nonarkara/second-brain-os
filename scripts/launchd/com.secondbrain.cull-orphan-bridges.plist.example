@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.secondbrain.cull-orphan-bridges</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO__/scripts/cull-orphan-mcp-bridges.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>OBSIDIAN_BRIDGE_CULL_MIN_AGE_SEC</key>
+    <string>3600</string>
+    <key>OBSIDIAN_BRIDGE_CULL_KEEP_NEWEST</key>
+    <string>1</string>
+  </dict>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+</dict>
+</plist>

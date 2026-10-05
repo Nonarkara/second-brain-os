@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --check index.js && node smoke-test.mjs"
+    "test": "node --check index.js && node --check smoke-test.mjs && node --test paths.test.mjs"
   },
   "keywords": [],
   "author": "",

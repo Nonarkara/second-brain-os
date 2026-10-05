@@ -60,6 +60,14 @@ class SecretDetected(ValueError):
     """Raised without including the matched secret value."""
 
 
+def operator_timezone() -> ZoneInfo:
+    name = os.environ.get("OBSIDIAN_TIME_ZONE", "Asia/Bangkok").strip() or "Asia/Bangkok"
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return ZoneInfo("Asia/Bangkok")
+
+
 def _posix(relative_path: str) -> str:
     return str(PurePosixPath(str(relative_path).replace("\\", "/"))).lstrip("./")
 
@@ -399,7 +407,7 @@ class MemoryIndex:
                     (cursor.lastrowid, note.path, note.title, heading, content),
                 )
 
-        now = datetime.now(ZoneInfo("Asia/Bangkok")).isoformat(timespec="seconds")
+        now = datetime.now(operator_timezone()).isoformat(timespec="seconds")
         connection.execute(
             "INSERT OR REPLACE INTO metadata(key, value) VALUES ('last_index_at', ?)", (now,)
         )
@@ -643,7 +651,7 @@ def capture_lesson(vault: Path, payload: Dict[str, object]) -> Dict[str, str]:
     verification = str(payload.get("verification", "")).strip()
     status = "verified" if _verification_is_concrete(verification) else "candidate"
     folder = "Scars/Debug-Logs" if status == "verified" else "Scars/Candidates"
-    date = datetime.now(ZoneInfo("Asia/Bangkok")).strftime("%Y-%m-%d")
+    date = datetime.now(operator_timezone()).strftime("%Y-%m-%d")
     slug = _slugify(str(payload["title"]))
     relative = f"{folder}/{date}-{slug}.md"
     target = Path(vault).expanduser().resolve() / relative

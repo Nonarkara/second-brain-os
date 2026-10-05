@@ -5,22 +5,26 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import fs from "fs/promises";
 import path from "path";
 import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import { resolveBrainCli, resolveGenerateToday, timeZone } from "./paths.mjs";
 
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const VAULT = process.env.OBSIDIAN_VAULT || path.join(process.env.HOME, "Documents/SecondBrain");
 const TEMPLATES_DIR = "Reflexes/Templates";
-const BRAIN_CLI = path.join(VAULT, ".mcp/obsidian-memory/brain.py");
+const TIME_ZONE = timeZone();
+const BRAIN_CLI = resolveBrainCli({ scriptDir: SCRIPT_DIR, vault: VAULT });
 
 function today() {
-  return new Date().toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).slice(0, 10);
+  return new Date().toLocaleString("sv-SE", { timeZone: TIME_ZONE }).slice(0, 10);
 }
 
 function timeNow() {
-  return new Date().toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).slice(11, 16);
+  return new Date().toLocaleString("sv-SE", { timeZone: TIME_ZONE }).slice(11, 16);
 }
 
 function bangkokDate(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Bangkok",
+    timeZone: TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit"
@@ -376,12 +380,19 @@ async function appendToLog(heading, content) {
 }
 
 async function generateToday() {
-  const scriptPath = path.join(VAULT, "Reflexes/Scripts/generate-today.mjs");
+  const scriptPath = resolveGenerateToday({ scriptDir: SCRIPT_DIR, vault: VAULT });
+  try {
+    await fs.access(scriptPath);
+  } catch {
+    return `Error: generate-today.mjs not found at ${scriptPath}. Set OBSIDIAN_GENERATE_TODAY, or use the shipped scripts/generate-today.mjs.`;
+  }
   const { execFile } = await import("child_process");
   const { promisify } = await import("util");
   const execFileAsync = promisify(execFile);
   try {
-    const { stdout } = await execFileAsync("node", [scriptPath], { env: { ...process.env, OBSIDIAN_VAULT: VAULT } });
+    const { stdout } = await execFileAsync(process.execPath, [scriptPath], {
+      env: { ...process.env, OBSIDIAN_VAULT: VAULT, OBSIDIAN_TIME_ZONE: TIME_ZONE }
+    });
     return stdout.trim() || "Bridges/Today.md regenerated.";
   } catch (err) {
     return `Error running generate-today.mjs: ${err.message}`;
@@ -485,10 +496,18 @@ async function searchVault(query) {
 }
 
 async function runBrain(args, input = "") {
+  try {
+    await fs.access(BRAIN_CLI);
+  } catch {
+    throw new Error(
+      `brain.py not found (${BRAIN_CLI}). The shipped layout is mcp/obsidian-memory/brain.py next to this bridge. Set OBSIDIAN_BRAIN_CLI if you moved it.`
+    );
+  }
+  const python = process.env.OBSIDIAN_PYTHON || "python3";
   return new Promise((resolve, reject) => {
-    const child = spawn("python3", [BRAIN_CLI, ...args], {
+    const child = spawn(python, [BRAIN_CLI, ...args], {
       cwd: VAULT,
-      env: { ...process.env, OBSIDIAN_VAULT: VAULT },
+      env: { ...process.env, OBSIDIAN_VAULT: VAULT, OBSIDIAN_TIME_ZONE: TIME_ZONE },
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";
@@ -918,9 +937,6 @@ ${args.promote_to || "Decide later."}
 async function auditSuperMcp() {
   const requiredFiles = [
     ".mcp.json",
-    ".mcp/obsidian-bridge/index.js",
-    ".mcp/obsidian-memory/brain.py",
-    ".mcp/obsidian-memory/memory_core.py",
     ".mcp/capture-session-hook.js",
     ".codex-vault/codex-context.mjs",
     "Bridges/Agent-Core.md",
@@ -951,6 +967,12 @@ async function auditSuperMcp() {
     const ok = Boolean(await readVaultNote(rel));
     checks.push(`${ok ? "PASS" : "WARN"} file ${rel}`);
   }
+  const bridgeScript = path.join(SCRIPT_DIR, "index.js");
+  const bridgeOk = await fs.access(bridgeScript).then(() => true).catch(() => false);
+  const brainOk = await fs.access(BRAIN_CLI).then(() => true).catch(() => false);
+  checks.push(`${bridgeOk ? "PASS" : "WARN"} filesystem bridge script: ${bridgeScript}`);
+  checks.push(`${brainOk ? "PASS" : "WARN"} brain CLI: ${BRAIN_CLI}`);
+  checks.push("INFO a vault copy of the bridge is optional; this process uses the script it was started from");
   for (const rel of requiredDirs) {
     const ok = await fs.stat(safeVaultPath(rel)).then(s => s.isDirectory()).catch(() => false);
     checks.push(`${ok ? "PASS" : "WARN"} dir ${rel}`);
@@ -1026,7 +1048,7 @@ async function updateContext(sectionHeading, content) {
   if (!doc) return "Error: CONTEXT.md not found. Create it first.";
 
   // Update the 'updated:' field in frontmatter
-  const nowStr = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).slice(0, 16);
+  const nowStr = new Date().toLocaleString("sv-SE", { timeZone: TIME_ZONE }).slice(0, 16);
   doc = doc.replace(/^updated: .+$/m, `updated: ${nowStr}`);
 
   // Find the target heading and replace content until next ## heading or EOF
@@ -1048,7 +1070,7 @@ async function logDecision(decision, rationale) {
   let doc = await fs.readFile(CONTEXT_PATH, "utf8").catch(() => "");
   if (!doc) return "Error: CONTEXT.md not found.";
 
-  const nowStr = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).slice(0, 10);
+  const nowStr = new Date().toLocaleString("sv-SE", { timeZone: TIME_ZONE }).slice(0, 10);
   // Update updated: timestamp
   doc = doc.replace(/^updated: .+$/m, `updated: ${nowStr}`);
 
@@ -1069,7 +1091,7 @@ async function logSession(conversationId, focus, keyOutput, filesWritten) {
   let doc = await fs.readFile(SESSIONS_PATH, "utf8").catch(() => "");
   if (!doc) return "Error: SESSIONS.md not found.";
 
-  const nowStr = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).slice(0, 10);
+  const nowStr = new Date().toLocaleString("sv-SE", { timeZone: TIME_ZONE }).slice(0, 10);
   const newRow = `| ${nowStr} | ${conversationId} | ${focus} | ${keyOutput} | ${filesWritten || "—"} |`;
 
   // Append row after the table header+separator

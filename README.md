@@ -31,12 +31,13 @@ What is in **this** public tree:
 | [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md) | **A+ coding MCP:** filesystem forge + disposable recall index (cull / smoke / eval). Optional Local REST API alternate. |
 | [`mcp/obsidian-bridge/`](mcp/obsidian-bridge/) | Production **filesystem** MCP for Cursor/Claude/Codex — works with Obsidian open or closed. |
 | [`mcp/obsidian-memory/`](mcp/obsidian-memory/) | Local `brain` CLI: index / recall / capture / audit / eval (SQLite + optional Ollama embeds). |
-| [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example) | Stdio forge wiring. Absolute paths; never commit secrets. |
-| [`scripts/cull-orphan-mcp-bridges.sh`](scripts/cull-orphan-mcp-bridges.sh) | Kill leftover bridge Node processes clients abandon. |
+| [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example) | Stdio forge wiring for Cursor / Claude. `node` or `command -v node` on this machine. |
+| [`mcp/config/codex-config.toml.example`](mcp/config/codex-config.toml.example) | Codex `[mcp_servers.obsidian]` block, including timeouts and `OBSIDIAN_TIME_ZONE`. |
+| [`scripts/cull-orphan-mcp-bridges.sh`](scripts/cull-orphan-mcp-bridges.sh) | Keep one bridge per live client. Remove older extras after the age floor. |
 | [`skills/`](skills/) | Nine Claude Code skills (slash commands) as markdown. |
 | [`council/`](council/) | Sequential-debate protocol: Hannah (chair), Radar (skeptic), Tenet (long view). Endpoints and orchestrator — not a hosted Telegram product. |
 | [`braind/`](braind/) | A one-shot “pulse” worker: transfer when online, compute when offline. Keys stay in the operator’s environment. |
-| [`scripts/`](scripts/) | macOS-oriented vault backup helpers (private git + rclone). |
+| [`scripts/`](scripts/) | Backup helpers, nightly maintenance, doctor, `generate-today`, and example launchd plists. |
 
 The **AI council** deliberates. The **vault** remembers. You decide.
 
@@ -57,7 +58,7 @@ Four studio tenets. They are how this repo is meant to be forked, not slogans.
 
 **Fork the method, not the secrets.** The vault *shape*, the MCP tools, the PASS/DONE council protocol, and the skills are the public claim. Personal notes, Soul identity files, Telegram tokens, Obsidian API keys, and backup remotes are not. If a learner needs your diary to use the system, the system failed.
 
-**One Mac.** Obsidian + an MCP-capable agent + this tree. The recommended **coding** path is the filesystem forge (`mcp/obsidian-bridge`) plus disposable local recall (`mcp/obsidian-memory`) — no vector SaaS bill. Cull orphan bridge processes. Optional Local REST API MCP when Obsidian is open. `braind` is a pulse launched by `launchd`, not a cluster.
+**One Mac.** Obsidian + an MCP-capable agent + this tree. The recommended **coding** path is the filesystem forge (`mcp/obsidian-bridge`) plus disposable local recall (`mcp/obsidian-memory`) — no vector SaaS bill. Keep one bridge per live client; cull only the aged extras. Optional Local REST API MCP when Obsidian is open. `braind` is a pulse launched by `launchd`, not a cluster. A second computer may read a copy of the vault. Only one machine runs the nightly writer. See the two-machine section in the setup guide.
 
 **No black-box rankings.** This is not a city index, and it is not RAG-as-oracle. You choose the `[[wikilinks]]`. The agent reads the note you wrote, not a cosine score from someone else’s corpus. If you cannot open the file the model saw, it does not belong in the loop.
 
@@ -130,19 +131,24 @@ Nine regions (folders in `vault/`):
 
 ### 2. Connect the agent (recommended — filesystem forge)
 
-Follow [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md). Copy [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example), set absolute paths, never commit secrets.
+Follow [`docs/obsidian-mcp-setup.md`](docs/obsidian-mcp-setup.md). Copy [`mcp/config/.mcp.json.example`](mcp/config/.mcp.json.example) or the [Codex toml example](mcp/config/codex-config.toml.example). Set absolute paths on **this** machine. Never commit them.
 
 ```bash
-export OBSIDIAN_VAULT=/absolute/path/to/vault   # or "$PWD/vault" while learning
-cd mcp/obsidian-bridge && npm install
-python3 ../obsidian-memory/brain.py index --json
-node smoke-test.mjs
-bash ../../scripts/cull-orphan-mcp-bridges.sh
+export OBSIDIAN_VAULT="$PWD/vault"   # or your real vault
+export OBSIDIAN_TIME_ZONE="${OBSIDIAN_TIME_ZONE:-Asia/Bangkok}"
+cd mcp/obsidian-bridge && npm install && cd ../..
+python3 mcp/obsidian-memory/brain.py index --json
+node mcp/obsidian-bridge/smoke-test.mjs
+bash scripts/cull-orphan-mcp-bridges.sh
 ```
 
-Optional: Official Local REST API + MCP when Obsidian stays open — documented second in the setup guide. Coding agents should keep the filesystem forge wired either way.
+The bridge finds `brain.py` beside itself under `mcp/`. You do not copy the bridge into the vault. Smoke must print `"status": "pass"`.
 
-#1 forge failure mode: orphan `node …/obsidian-bridge` processes — cull them. #1 REST failure mode: plugin enabled but ports not listening — fully quit and reopen Obsidian, then `lsof`.
+Optional: Official Local REST API + MCP when Obsidian stays open — documented second in the setup guide. Coding agents keep the filesystem forge wired either way. Coding does not depend on REST.
+
+A live client holds one bridge. Codex can hold one extra per thread until the hourly cull’s age floor. Do not aim for zero processes while you are working. REST’s failure mode is a plugin that looks enabled while the port is closed (including an Obsidian keepalive with no window).
+
+Eval is 20 cases from **your** notes: `python3 mcp/obsidian-memory/build_eval_cases.py`, then `brain.py eval`. The learning stub can pass smoke before it has 20 scars.
 
 ### 3. Skills
 
@@ -176,7 +182,9 @@ Tokens (`TELEGRAM_BOT_TOKEN`, `COUNCIL_SECRET`, `COUNCIL_GROUP_ID`, member URLs)
 
 ### 5. Backups and the pulse (optional, your machine)
 
-[`scripts/backup-vault-github.sh`](scripts/backup-vault-github.sh) commits a vault git repo and pushes. [`scripts/backup-vault-gdrive.sh`](scripts/backup-vault-gdrive.sh) rclone-syncs, excluding `.git`, cache, and credential-like files. Both assume macOS paths (`~/Documents/SecondBrain`, `~/Library/Logs`). Point them at **your** private remote. No `launchd` plist is committed here.
+[`scripts/backup-vault-github.sh`](scripts/backup-vault-github.sh) commits a vault git repo and pushes. [`scripts/backup-vault-gdrive.sh`](scripts/backup-vault-gdrive.sh) rclone-syncs, excluding `.git`, cache, and credential-like files. Both assume `~/Documents/SecondBrain` and `~/Library/Logs`. Point them at **your** private remote.
+
+Nightly maintenance (one writer machine, 05:30 local) is [`scripts/vault-maintenance.mjs`](scripts/vault-maintenance.mjs), with [`scripts/secondbrain-doctor.mjs`](scripts/secondbrain-doctor.mjs) and [`scripts/generate-today.mjs`](scripts/generate-today.mjs). Example plists are in [`scripts/launchd/`](scripts/launchd/). Replace `__HOME__` and `__REPO__` on that machine. Do not commit the filled-in plist. A second machine pulls; it does not run the writer.
 
 [`braind/`](braind/) is a one-pulse Node worker (`node braind.mjs`). Online: pull captures / snapshots if a key is set. Offline: still compute (local index + optional Ollama pulse note). Configure `OBSIDIAN_VAULT` and keys in the environment. Do not commit them. Do not treat the default API host in source as a public learner endpoint.
 

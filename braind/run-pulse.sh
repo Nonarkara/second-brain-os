@@ -2,7 +2,7 @@
 # One brain pulse, run by launchd every 15 minutes.
 # launchd provides almost no environment; everything is explicit.
 set -uo pipefail
-export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 LOG="$HOME/Library/Logs/braind.log"
 
